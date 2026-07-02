@@ -1,8 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 42" {{ $attributes }}>
-    <path 
-        fill="currentColor" 
-        fill-rule="evenodd" 
-        clip-rule="evenodd"
-        d="M17.2 5.633 8.6.855 0 5.633v26.51l16.2 9 16.2-9v-8.442l7.6-4.223V9.856l-8.6-4.777-8.6 4.777V18.3l-5.6 3.111V5.633ZM38 18.301l-5.6 3.11v-6.157l5.6-3.11V18.3Zm-1.06-7.856-5.54 3.078-5.54-3.079 5.54-3.078 5.54 3.079ZM24.8 18.3v-6.157l5.6 3.111v6.158L24.8 18.3Zm-1 1.732 5.54 3.078-13.14 7.302-5.54-3.078 13.14-7.3v-.002Zm-16.2 7.89 7.6 4.222V38.3L2 30.966V7.92l5.6 3.111v16.892ZM8.6 9.3 3.06 6.222 8.6 3.143l5.54 3.08L8.6 9.3Zm21.8 15.51-13.2 7.334V38.3l13.2-7.334v-6.156ZM9.6 11.034l5.6-3.11v14.6l-5.6 3.11v-14.6Z"
-    />
+    <rect x="4.5" y="6.5" width="31" height="29" rx="5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+    <rect x="9" y="10" width="22" height="8" rx="2.2" fill="currentColor" opacity="0.16"/>
+    <path d="M10 23.5h20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M10 27.5h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M22 27.5h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M12.4 4.4c1.1-.7 2.5-.7 3.6 0l1.1.8H11.3l1.1-.8Z" fill="currentColor"/>
+    <path d="M23 4.6h4.5v2.2H23z" fill="currentColor"/>
+    <circle cx="27.5" cy="14" r="3.7" fill="currentColor"/>
+    <path d="M25.8 11.7 30 14l-4.2 2.3v-4.6Z" fill="white"/>
+    <path d="M7.8 15.2c1.5-1.8 4.2-2.3 6.2-1.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+    <path d="M7.8 18.4c1.2-.8 2.8-1.2 4.3-.9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
 </svg>
