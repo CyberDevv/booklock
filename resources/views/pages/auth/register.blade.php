@@ -6,7 +6,7 @@
         <!-- Session Status -->
         <x-auth-session-status class="text-center" :status="session('status')" />
 
-        <form method="POST" action="{{ route('register.store') }}" class="flex flex-col gap-6">
+        <form method="POST" action="{{ route('register.store') }}" class="flex flex-col gap-6" onsubmit="const btn = document.getElementById('register-submit-btn'); btn.disabled = true; btn.setAttribute('data-flux-loading', 'true');">
             @csrf
             <!-- Name -->
             <flux:input name="name" :label="__('Name')" :value="old('name')" type="text" required autofocus
@@ -29,7 +29,7 @@
                 viewable />
 
             <div class="flex items-center justify-end">
-                <flux:button type="submit" variant="primary" class="w-full" data-test="register-user-button">
+                <flux:button id="register-submit-btn" type="submit" variant="primary" class="w-full" data-test="register-user-button" loading="true">
                     Create account
                 </flux:button>
             </div>

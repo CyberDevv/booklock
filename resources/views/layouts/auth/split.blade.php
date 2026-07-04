@@ -20,7 +20,7 @@
 
             <div class="relative z-20 mt-auto">
                 <blockquote class="space-y-2">
-                    <flux:text class="text-[56px] font-light italic">
+                    <flux:text class="text-[56px] font-light italic xl:pe-20 2xl:pe-40">
                         {!! $showText ?? 'Welcome Back, <br /> Book your cinematic adventure now with our ticketing platform!' !!}
                     </flux:text>
                 </blockquote>
