@@ -6,13 +6,14 @@ namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Http\Responses\LoginResponse;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Fortify\Fortify;
+use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 use Override;
 
 class FortifyServiceProvider extends ServiceProvider
@@ -34,6 +35,8 @@ class FortifyServiceProvider extends ServiceProvider
         $this->configureActions();
         $this->configureViews();
         $this->configureRateLimiting();
+
+        $this->app->singleton(LoginResponseContract::class, LoginResponse::class);
     }
 
     /**
@@ -43,16 +46,6 @@ class FortifyServiceProvider extends ServiceProvider
     {
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         Fortify::createUsersUsing(CreateNewUser::class);
-
-        $redirectBasedOnRole = fn() => Auth::user()?->hasRole('Admin') ? '/dashboard' : '/';
-
-        Fortify::redirects('login', $redirectBasedOnRole);
-        Fortify::redirects('register', $redirectBasedOnRole);
-        Fortify::redirects('password-reset', $redirectBasedOnRole);
-        Fortify::redirects('email-verification', $redirectBasedOnRole);
-        Fortify::redirects('two-factor-login', $redirectBasedOnRole);
-        Fortify::redirects('password-confirmation', $redirectBasedOnRole);
-
     }
 
     /**
