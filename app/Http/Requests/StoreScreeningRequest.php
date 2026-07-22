@@ -12,7 +12,7 @@ class StoreScreeningRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return $this->user()->hasRole('Admin');
     }
 
     /**
@@ -23,7 +23,10 @@ class StoreScreeningRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'movie_id' => 'required|integer|exists:movies,id',
+            'hall_id' => 'required|integer|exists:halls,id',
+            'starts_at' => 'required|date|after:now',
+            'price_kobo' => 'required|integer|min:1',
         ];
     }
 }

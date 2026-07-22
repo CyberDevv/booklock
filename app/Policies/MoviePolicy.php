@@ -13,7 +13,7 @@ class MoviePolicy
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->hasRole('Admin');
     }
 
     /**
@@ -21,7 +21,7 @@ class MoviePolicy
      */
     public function view(User $user, Movie $movie): bool
     {
-        return false;
+        return $user->hasRole('Admin');
     }
 
     /**
@@ -29,7 +29,7 @@ class MoviePolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        return $user->hasRole('Admin');
     }
 
     /**
@@ -37,7 +37,7 @@ class MoviePolicy
      */
     public function update(User $user, Movie $movie): bool
     {
-        return false;
+        return $user->hasRole('Admin');
     }
 
     /**
@@ -45,7 +45,7 @@ class MoviePolicy
      */
     public function delete(User $user, Movie $movie): bool
     {
-        return false;
+        return $user->hasRole('Admin');
     }
 
     /**
@@ -53,14 +53,6 @@ class MoviePolicy
      */
     public function restore(User $user, Movie $movie): bool
     {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Movie $movie): bool
-    {
-        return false;
+        return $user->hasRole('Admin');
     }
 }

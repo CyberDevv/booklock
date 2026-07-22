@@ -13,7 +13,7 @@ class HallPolicy
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->hasRole('Admin');
     }
 
     /**
@@ -21,7 +21,7 @@ class HallPolicy
      */
     public function view(User $user, Hall $hall): bool
     {
-        return false;
+        return $user->hasRole('Admin');
     }
 
     /**
@@ -29,7 +29,7 @@ class HallPolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        return $user->hasRole('Admin');
     }
 
     /**
@@ -37,7 +37,7 @@ class HallPolicy
      */
     public function update(User $user, Hall $hall): bool
     {
-        return false;
+        return $user->hasRole('Admin');
     }
 
     /**
@@ -45,22 +45,6 @@ class HallPolicy
      */
     public function delete(User $user, Hall $hall): bool
     {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Hall $hall): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Hall $hall): bool
-    {
-        return false;
+        return $user->hasRole('Admin');
     }
 }

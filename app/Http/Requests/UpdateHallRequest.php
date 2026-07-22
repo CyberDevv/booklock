@@ -12,7 +12,7 @@ class UpdateHallRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return $this->user()->hasRole('Admin');
     }
 
     /**
@@ -23,7 +23,10 @@ class UpdateHallRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'name' => 'required|string|max:255',
+            'rows' => 'required|integer|min:1|max:50',
+            'seats_per_row' => 'required|integer|min:1|max:100',
         ];
     }
+
 }

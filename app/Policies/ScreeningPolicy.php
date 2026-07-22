@@ -13,7 +13,7 @@ class ScreeningPolicy
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->hasRole('Admin');
     }
 
     /**
@@ -21,7 +21,7 @@ class ScreeningPolicy
      */
     public function view(User $user, Screening $screening): bool
     {
-        return false;
+        return $user->hasRole('Admin');
     }
 
     /**
@@ -29,7 +29,7 @@ class ScreeningPolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        return $user->hasRole('Admin');
     }
 
     /**
@@ -37,7 +37,7 @@ class ScreeningPolicy
      */
     public function update(User $user, Screening $screening): bool
     {
-        return false;
+        return $user->hasRole('Admin');
     }
 
     /**
@@ -45,22 +45,7 @@ class ScreeningPolicy
      */
     public function delete(User $user, Screening $screening): bool
     {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Screening $screening): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Screening $screening): bool
-    {
-        return false;
+        // TODO: Implement logic to check if the screening has any booked seats before allowing deletion => && $screening->bookings()->where('status', 'confirmed')->count() === 0;
+        return $user->hasRole('Admin');
     }
 }
