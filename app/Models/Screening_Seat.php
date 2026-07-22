@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Screening_Seat extends Model
 {
@@ -29,5 +30,10 @@ class Screening_Seat extends Model
     public function screening(): BelongsTo
     {
         return $this->belongsTo(Screening::class);
+    }
+
+    public function booking_seats(): HasMany
+    {
+        return $this->hasMany(Booking_Seat::class);
     }
 }

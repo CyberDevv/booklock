@@ -42,5 +42,8 @@ class Screening extends Model
         return $this->hasMany(Screening_Seat::class);
     }
 
-
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class);
+    }
 }
