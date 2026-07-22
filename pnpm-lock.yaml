@@ -15,7 +15,7 @@ importers:
         specifier: ^4.1.11
         version: 4.3.3(vite@8.1.5(jiti@2.7.0))
       concurrently:
-        specifier: ^9.0.1
+        specifier: ^9.2.4
         version: 9.2.4
       laravel-vite-plugin:
         specifier: ^3.1
