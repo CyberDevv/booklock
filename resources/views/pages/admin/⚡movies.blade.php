@@ -5,172 +5,117 @@ use Livewire\Attributes\Title;
 use Livewire\Flux\Flux;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Validate;
+use Livewire\WithPagination;
+use App\Models\Movie;
 
 new #[Title('Movies & Shows'), Layout('layouts.app')] class extends Component {
+    use WithPagination;
+    // Display state
+    public bool $showArchived = false;
+
+    // Modal state
+    public bool $showCreateModal = false;
+    public bool $showEditModal = false;
+    public ?int $editingMovieId = null;
+
+    // Form fields (with validation attributes)
+    #[Validate('required|string|max:255')]
+    public string $title = '';
+
+    #[Validate('nullable|string')]
+    public string $description = '';
+
+    #[Validate('required|string|max:100')]
+    public string $genre = '';
+
+    #[Validate('required|integer|min:1')]
+    public int $duration_mins = 0;
+
+    #[Validate('required|string|max:10')]
+    public string $age_rating = '';
+
+    #[Validate('required|url|max:500')]
+    public string $poster_url = '';
+
+    // Filter state
     public string $search = '';
     public string $filterGenre = '';
-    public string $filterStatus = '';
+    public string $filterStatus = ''; // 'now_showing', 'coming_soon', 'ended', 'no_screenings'
+
+    // Reset pagination when any filter changes
+    public function updatedSearch(): void { $this->resetPage(); }
+    public function updatedFilterGenre(): void { $this->resetPage(); }
+    public function updatedFilterStatus(): void { $this->resetPage(); }
+    public function updatedShowArchived(): void { $this->resetPage(); }
+
+    // Sorting state
     public string $sortBy = 'title';
     public string $sortDir = 'asc';
 
-    public bool $showModal = false;
-    public bool $showDeleteModal = false;
-    public ?int $editingId = null;
-    public ?int $deletingId = null;
-
-    // Form fields
-    public string $form_title = '';
-    public string $form_genre = '';
-    public string $form_duration = '';
-    public string $form_rating = '';
-    public string $form_format = '';
-    public string $form_price = '';
-    public string $form_status = 'active';
-    public string $form_description = '';
-    public string $form_image = '';
-    public string $form_release = '';
-
-    public array $movies = [
-        [
-            'id' => 1,
-            'title' => 'Neon Horizon',
-            'genre' => 'Sci-Fi',
-            'duration' => '2h 08m',
-            'rating' => '4.8',
-            'format' => 'IMAX',
-            'price' => 14.5,
-            'status' => 'active',
-            'description' => 'A visually stunning sci-fi epic where the boundaries of reality blur with digital consciousness.',
-            'image' => 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80',
-            'release' => '2025-06-15',
-            'bookings' => 342,
-        ],
-        [
-            'id' => 2,
-            'title' => 'Moonlight Run',
-            'genre' => 'Thriller',
-            'duration' => '1h 54m',
-            'rating' => '4.6',
-            'format' => 'Dolby Atmos',
-            'price' => 12.5,
-            'status' => 'active',
-            'description' => 'A heart-pounding thriller following a former agent racing against time through neon-lit city streets.',
-            'image' => 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=400&q=80',
-            'release' => '2025-05-20',
-            'bookings' => 219,
-        ],
-        [
-            'id' => 3,
-            'title' => 'Golden Hour',
-            'genre' => 'Drama',
-            'duration' => '2h 12m',
-            'rating' => '4.9',
-            'format' => 'Standard',
-            'price' => 11.0,
-            'status' => 'active',
-            'description' => 'An emotional drama following three strangers whose lives intertwine during one golden hour.',
-            'image' => 'https://images.unsplash.com/photo-1478720568477-152d9b164e26?auto=format&fit=crop&w=400&q=80',
-            'release' => '2025-04-10',
-            'bookings' => 478,
-        ],
-        [
-            'id' => 4,
-            'title' => 'Iron Veil',
-            'genre' => 'Action',
-            'duration' => '2h 24m',
-            'rating' => '4.4',
-            'format' => 'IMAX',
-            'price' => 15.0,
-            'status' => 'active',
-            'description' => 'An elite operative goes rogue to expose a global conspiracy hidden in plain sight.',
-            'image' => 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=400&q=80',
-            'release' => '2025-07-01',
-            'bookings' => 91,
-        ],
-        [
-            'id' => 5,
-            'title' => 'Whisper Woods',
-            'genre' => 'Horror',
-            'duration' => '1h 48m',
-            'rating' => '4.2',
-            'format' => 'Standard',
-            'price' => 10.5,
-            'status' => 'coming_soon',
-            'description' => 'Deep in an ancient forest, a group of friends uncovers a terrifying secret that should have stayed buried.',
-            'image' => 'https://images.unsplash.com/photo-1509347528160-9a9e33742cdb?auto=format&fit=crop&w=400&q=80',
-            'release' => '2025-08-15',
-            'bookings' => 0,
-        ],
-        [
-            'id' => 6,
-            'title' => 'The Last Orbit',
-            'genre' => 'Sci-Fi',
-            'duration' => '2h 35m',
-            'rating' => '4.7',
-            'format' => 'Dolby Atmos',
-            'price' => 13.0,
-            'status' => 'archived',
-            'description' => "The crew of humanity's last spaceship must decide who deserves a place among the stars.",
-            'image' => 'https://images.unsplash.com/photo-1446776877081-d282a0f896e2?auto=format&fit=crop&w=400&q=80',
-            'release' => '2024-11-03',
-            'bookings' => 612,
-        ],
-        [
-            'id' => 7,
-            'title' => 'City of Echoes',
-            'genre' => 'Drama',
-            'duration' => '1h 59m',
-            'rating' => '4.5',
-            'format' => 'Standard',
-            'price' => 11.5,
-            'status' => 'coming_soon',
-            'description' => "A journalist uncovers buried stories of a city's forgotten residents, changing lives in the process.",
-            'image' => 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=400&q=80',
-            'release' => '2025-09-05',
-            'bookings' => 0,
-        ],
-        [
-            'id' => 8,
-            'title' => 'Blaze Protocol',
-            'genre' => 'Action',
-            'duration' => '2h 01m',
-            'rating' => '4.3',
-            'format' => 'IMAX',
-            'price' => 14.0,
-            'status' => 'archived',
-            'description' => "When a rogue AI takes control of a city's infrastructure, one firefighter must save the day.",
-            'image' => 'https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?auto=format&fit=crop&w=400&q=80',
-            'release' => '2024-09-22',
-            'bookings' => 389,
-        ],
-    ];
-
-    public array $genres = ['Action', 'Drama', 'Horror', 'Sci-Fi', 'Thriller', 'Comedy', 'Romance', 'Animation'];
-    public array $formats = ['IMAX', 'Dolby Atmos', 'Standard', '4DX'];
-
-    #[Computed]
-    public function filteredMovies(): array
+    // Computed property for movies
+    public function with(): array
     {
-        return collect($this->movies)
-            ->when($this->search, fn($c) => $c->filter(fn($m) => str_contains(strtolower($m['title']), strtolower($this->search)) || str_contains(strtolower($m['genre']), strtolower($this->search))))
-            ->when($this->filterGenre, fn($c) => $c->where('genre', $this->filterGenre))
-            ->when($this->filterStatus, fn($c) => $c->where('status', $this->filterStatus))
-            ->sortBy($this->sortBy, SORT_REGULAR, $this->sortDir === 'desc')
-            ->values()
-            ->toArray();
+        $query = $this->showArchived
+            ? Movie::onlyTrashed()
+            : Movie::query();
+
+        // Apply search filter
+        if ($this->search) {
+            $query->where(function ($q) {
+                $q->where('title', 'like', '%' . $this->search . '%')
+                  ->orWhere('description', 'like', '%' . $this->search . '%');
+            });
+        }
+
+        // Apply genre filter
+        if ($this->filterGenre) {
+            $query->where('genre', $this->filterGenre);
+        }
+
+        // Apply status filter based on screening times
+        $now = now();
+        if ($this->filterStatus === 'now_showing') {
+            $query->whereHas('screenings', fn($q) =>
+                $q->where('starts_at', '<=', $now)
+                  ->where('starts_at', '>=', $now->copy()->subHours(4))
+            );
+        } elseif ($this->filterStatus === 'coming_soon') {
+            $query->whereHas('screenings', fn($q) => $q->where('starts_at', '>', $now));
+        } elseif ($this->filterStatus === 'ended') {
+            $query->whereDoesntHave('screenings', fn($q) => $q->where('starts_at', '>=', $now->copy()->subHours(4)))
+                  ->whereHas('screenings');
+        } elseif ($this->filterStatus === 'no_screenings') {
+            $query->doesntHave('screenings');
+        }
+
+        // Load counts for related data
+        $query->withCount('screenings');
+
+        // Efficient status counts (avoids loading screening records into memory)
+        $query->withCount([
+            'screenings as now_showing_count' => fn($q) => $q
+                ->where('starts_at', '<=', now())
+                ->where('starts_at', '>=', now()->subHours(4)),
+            'screenings as upcoming_count' => fn($q) => $q
+                ->where('starts_at', '>', now()),
+            'screenings as bookings_count' => fn($q) => $q
+                ->join('bookings', 'screenings.id', '=', 'bookings.screening_id')
+                ->where('bookings.status', 'confirmed'),
+        ]);
+
+        // Apply sorting
+        $query->orderBy($this->sortBy, $this->sortDir);
+
+        return [
+            'movies' => $query->paginate(15),
+        ];
     }
 
-    #[Computed]
-    public function stats(): array
+    // Display methods
+    public function toggleArchived(): void
     {
-        $all = collect($this->movies);
-        return [
-            'total'       => $all->count(),
-            'active'      => $all->where('status', 'active')->count(),
-            'coming_soon' => $all->where('status', 'coming_soon')->count(),
-            'archived'    => $all->where('status', 'archived')->count(),
-            'bookings'    => $all->sum('bookings'),
-        ];
+        $this->showArchived = !$this->showArchived;
     }
 
     public function sort(string $column): void
@@ -183,148 +128,90 @@ new #[Title('Movies & Shows'), Layout('layouts.app')] class extends Component {
         }
     }
 
+    // Create methods
     public function openCreate(): void
     {
         $this->resetForm();
-        $this->editingId = null;
-        $this->showModal = true;
+        $this->showCreateModal = true;
     }
 
-    public function openEdit(int $id): void
+    public function closeCreateModal(): void
     {
-        $movie = collect($this->movies)->firstWhere('id', $id);
-        if (!$movie) return;
-
-        $this->editingId        = $id;
-        $this->form_title       = $movie['title'];
-        $this->form_genre       = $movie['genre'];
-        $this->form_duration    = $movie['duration'];
-        $this->form_rating      = $movie['rating'];
-        $this->form_format      = $movie['format'];
-        $this->form_price       = (string) $movie['price'];
-        $this->form_status      = $movie['status'];
-        $this->form_description = $movie['description'];
-        $this->form_image       = $movie['image'];
-        $this->form_release     = $movie['release'];
-        $this->showModal        = true;
+        $this->showCreateModal = false;
+        $this->resetForm();
     }
 
     public function save(): void
     {
-        $this->validate([
-            'form_title'  => 'required|min:2',
-            'form_genre'  => 'required',
-            'form_duration' => 'required',
-            'form_price'  => 'required|numeric|min:0',
-            'form_status' => 'required',
-        ]);
+        $validated = $this->validate();
+        Movie::create($validated);
+        $this->closeCreateModal();
+        session()->flash('success', 'Movie created!');
+    }
 
-        if ($this->editingId) {
-            $this->movies = collect($this->movies)
-                ->map(function ($m) {
-                    if ($m['id'] === $this->editingId) {
-                        return array_merge($m, [
-                            'title'       => $this->form_title,
-                            'genre'       => $this->form_genre,
-                            'duration'    => $this->form_duration,
-                            'rating'      => $this->form_rating,
-                            'format'      => $this->form_format,
-                            'price'       => (float) $this->form_price,
-                            'status'      => $this->form_status,
-                            'description' => $this->form_description,
-                            'image'       => $this->form_image,
-                            'release'     => $this->form_release,
-                        ]);
-                    }
-                    return $m;
-                })
-                ->toArray();
-        } else {
-            $this->movies[] = [
-                'id'          => collect($this->movies)->max('id') + 1,
-                'title'       => $this->form_title,
-                'genre'       => $this->form_genre,
-                'duration'    => $this->form_duration,
-                'rating'      => $this->form_rating ?: '—',
-                'format'      => $this->form_format ?: 'Standard',
-                'price'       => (float) $this->form_price,
-                'status'      => $this->form_status,
-                'description' => $this->form_description,
-                'image'       => $this->form_image,
-                'release'     => $this->form_release,
-                'bookings'    => 0,
-            ];
-        }
+    // Edit methods
+    public function openEdit(int $id): void
+    {
+        $movie = Movie::findOrFail($id);
+        $this->editingMovieId = $id;
 
-        $this->showModal = false;
+        // Load movie data into form
+        $this->title = $movie->title;
+        $this->description = $movie->description ?? '';
+        $this->genre = $movie->genre;
+        $this->duration_mins = $movie->duration_mins;
+        $this->age_rating = $movie->age_rating;
+        $this->poster_url = $movie->poster_url;
+
+        $this->showEditModal = true;
+    }
+
+    public function closeEditModal(): void
+    {
+        $this->showEditModal = false;
         $this->resetForm();
-
-        Flux::toast(
-            $this->editingId ? 'Movie updated successfully.' : 'New movie added to the catalogue.',
-            heading: $this->editingId ? 'Movie Saved' : 'Movie Added',
-            variant: 'success'
-        );
+        $this->editingMovieId = null;
     }
 
-    public function confirmDelete(int $id): void
+    public function update(): void
     {
-        $this->deletingId      = $id;
-        $this->showDeleteModal = true;
+        $validated = $this->validate();
+        Movie::findOrFail($this->editingMovieId)->update($validated);
+        $this->closeEditModal();
+        session()->flash('success', 'Movie updated!');
     }
 
-    public function delete(): void
-    {
-        $this->movies = collect($this->movies)->reject(fn($m) => $m['id'] === $this->deletingId)->values()->toArray();
-        $this->showDeleteModal = false;
-        $this->deletingId      = null;
-
-        Flux::toast('The movie has been permanently removed.', heading: 'Movie Deleted', variant: 'danger');
-    }
-
+    // Archive/Restore methods
     public function toggleStatus(int $id): void
     {
-        $movie = collect($this->movies)->firstWhere('id', $id);
-        $isArchiving = $movie && $movie['status'] === 'active';
+        $movie = Movie::withTrashed()->findOrFail($id);
 
-        $this->movies = collect($this->movies)
-            ->map(function ($m) use ($id) {
-                if ($m['id'] === $id) {
-                    $m['status'] = $m['status'] === 'active' ? 'archived' : 'active';
-                }
-                return $m;
-            })
-            ->toArray();
-
-        Flux::toast(
-            $isArchiving ? 'Movie has been archived and hidden from listings.' : 'Movie restored and now showing.',
-            heading: $isArchiving ? 'Movie Archived' : 'Movie Restored',
-            variant: $isArchiving ? 'warning' : 'success'
-        );
+        if ($movie->trashed()) {
+            $movie->restore();
+            session()->flash('success', 'Movie restored successfully!');
+        } else {
+            $movie->delete();
+            session()->flash('success', 'Movie archived successfully!');
+        }
     }
 
+    // 9. Helper method
     private function resetForm(): void
     {
-        $this->form_title       = '';
-        $this->form_genre       = '';
-        $this->form_duration    = '';
-        $this->form_rating      = '';
-        $this->form_format      = '';
-        $this->form_price       = '';
-        $this->form_status      = 'active';
-        $this->form_description = '';
-        $this->form_image       = '';
-        $this->form_release     = '';
+        $this->title = '';
+        $this->description = '';
+        $this->genre = '';
+        $this->duration_mins = 0;
+        $this->age_rating = '';
+        $this->poster_url = '';
     }
 };
+
 ?>
 
 <div class="flex flex-col gap-6 p-6">
-
     {{-- Page header --}}
-    <x-admin.page-header
-        title="Movies & Shows"
-        description="Manage your cinema catalogue, showtimes and statuses."
-    >
+    <x-admin.page-header title="Movies & Shows" description="Manage your cinema catalogue, showtimes and statuses.">
         <x-slot:action>
             <flux:button icon="plus" variant="primary" wire:click="openCreate">
                 Add Movie
@@ -332,226 +219,280 @@ new #[Title('Movies & Shows'), Layout('layouts.app')] class extends Component {
         </x-slot:action>
     </x-admin.page-header>
 
-    {{-- Stats row --}}
-    <x-admin.stats-grid :cols="4">
-        <x-admin.stats-card title="Total Titles"   :value="$this->stats['total']" />
-        <x-admin.stats-card title="Now Showing"    :value="$this->stats['active']"      value-color="text-emerald-500" />
-        <x-admin.stats-card title="Coming Soon"    :value="$this->stats['coming_soon']" value-color="text-amber-500" />
-        <x-admin.stats-card title="Total Bookings" :value="number_format($this->stats['bookings'])" />
-    </x-admin.stats-grid>
+    {{-- Filters --}}
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex flex-1 gap-3">
+            {{-- Search --}}
+            <div class="flex-1 max-w-md">
+                <flux:input wire:model.live.debounce.300ms="search" placeholder="Search movies..." icon="magnifying-glass" />
+            </div>
 
-    {{-- Filters + Search --}}
-    <div class="flex flex-wrap items-center gap-3">
-        <div class="relative flex-1 min-w-48">
-            <flux:input wire:model.live.debounce.300ms="search" placeholder="Search title or genre…"
-                icon="magnifying-glass" clearable />
+            {{-- Genre filter --}}
+            <flux:select wire:model.live="filterGenre" placeholder="All Genres" class="w-40">
+                <option value="">All Genres</option>
+                <option value="Action">Action</option>
+                <option value="Comedy">Comedy</option>
+                <option value="Drama">Drama</option>
+                <option value="Horror">Horror</option>
+                <option value="Sci-Fi">Sci-Fi</option>
+            </flux:select>
+
+            {{-- Status filter --}}
+            <flux:select wire:model.live="filterStatus" placeholder="All Status" class="w-44">
+                <option value="">All Status</option>
+                <option value="now_showing">🎬 Now Showing</option>
+                <option value="coming_soon">📅 Coming Soon</option>
+                <option value="ended">⏹️ Ended</option>
+                <option value="no_screenings">❌ No Screenings</option>
+            </flux:select>
         </div>
 
-        <flux:select wire:model.live="filterGenre" placeholder="All genres" class="w-40">
-            <flux:select.option value="">All genres</flux:select.option>
-            @foreach ($genres as $genre)
-                <flux:select.option value="{{ $genre }}">{{ $genre }}</flux:select.option>
-            @endforeach
-        </flux:select>
-
-        <flux:select wire:model.live="filterStatus" placeholder="All statuses" class="w-44">
-            <flux:select.option value="">All statuses</flux:select.option>
-            <flux:select.option value="active">Now Showing</flux:select.option>
-            <flux:select.option value="coming_soon">Coming Soon</flux:select.option>
-            <flux:select.option value="archived">Archived</flux:select.option>
-        </flux:select>
-
-        @if ($search || $filterGenre || $filterStatus)
-            <flux:button variant="ghost" size="sm"
-                wire:click="$set('search', ''); $set('filterGenre', ''); $set('filterStatus', '')">
-                Clear filters
-            </flux:button>
-        @endif
+        {{-- Archived toggle --}}
+        <flux:button variant="ghost" icon="archive-box" wire:click="toggleArchived">
+            {{ $showArchived ? 'Show Active' : 'Show Archived' }}
+        </flux:button>
     </div>
 
     {{-- Table --}}
-    <div class="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700">
-        <table class="w-full text-sm">
-            <thead class="bg-zinc-50 dark:bg-zinc-800/60">
-                <tr>
-                    <x-admin.sortable-th column="title"    :sort-by="$sortBy" :sort-dir="$sortDir">Movie</x-admin.sortable-th>
-                    <th class="px-4 py-3 text-left font-medium text-zinc-500 dark:text-zinc-400">Genre</th>
-                    <th class="px-4 py-3 text-left font-medium text-zinc-500 dark:text-zinc-400">Format</th>
-                    <x-admin.sortable-th column="price"    :sort-by="$sortBy" :sort-dir="$sortDir">Price</x-admin.sortable-th>
-                    <x-admin.sortable-th column="bookings" :sort-by="$sortBy" :sort-dir="$sortDir">Bookings</x-admin.sortable-th>
-                    <th class="px-4 py-3 text-left font-medium text-zinc-500 dark:text-zinc-400">Status</th>
-                    <th class="px-4 py-3 text-left font-medium text-zinc-500 dark:text-zinc-400">Release</th>
-                    <th class="px-4 py-3"></th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-zinc-100 bg-white dark:divide-zinc-700/50 dark:bg-zinc-900">
-                @forelse($this->filteredMovies as $movie)
-                    <tr class="group transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/40">
+    <x-admin.table
+    :table-headers="[
+        ['label' => 'Movie', 'column' => 'title', 'sortable' => true],
+        ['label' => 'Genre', 'column' => 'genre', 'sortable' => true],
+        ['label' => 'Duration', 'column' => 'duration_mins', 'sortable' => true],
+        ['label' => 'Age Rating', 'column' => 'age_rating', 'sortable' => true],
+        ['label' => 'Screenings', 'column' => 'screenings_count', 'sortable' => true],
+        ['label' => 'Bookings', 'column' => 'bookings_count', 'sortable' => true],
+        ['label' => 'Status', 'column' => 'screenings_count', 'sortable' => true],
+        ['label' => 'Created', 'column' => 'created_at', 'sortable' => true],
+    ]"
+    :data="$movies"
+    :sort-by="$sortBy"
+    :sort-dir="$sortDir"
+    empty-message="No movies match your filters."
+    empty-icon="film"
+    :show-footer="true"
+    :total="$movies->total()"
+    footer-noun="titles"
+>
+    {{-- Custom row rendering --}}
+    @foreach($movies as $movie)
+        <tr wire:key="movie-{{ $movie->id }}" class="group transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/40">
+            {{-- Movie title + poster --}}
+            <td class="px-4 py-3">
+                <div class="flex items-center gap-3">
+                    @if($movie->poster_url)
+                        <img src="{{ $movie->poster_url }}" alt="{{ $movie->title }}"
+                            class="size-10 rounded-lg object-cover"
+                            onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2260%22%3E%3Crect fill=%22%23e5e7eb%22 width=%2240%22 height=%2260%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%239ca3af%22 font-size=%228%22 font-family=%22system-ui%22%3ENo Image%3C/text%3E%3C/svg%3E';" />
+                    @else
+                        <div class="size-10 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                            <svg class="size-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                    @endif
+                    <div>
+                        <p class="font-medium text-zinc-900 dark:text-white">{{ $movie->title }}</p>
+                        <p class="text-xs text-zinc-400">{{ \Str::limit($movie->description ?? 'No description', 40) }}</p>
+                    </div>
+                </div>
+            </td>
 
-                        {{-- Movie title + thumbnail --}}
-                        <td class="px-4 py-3">
-                            <div class="flex items-center gap-3">
-                                <img src="{{ $movie['image'] }}" alt="{{ $movie['title'] }}"
-                                    class="size-10 rounded-lg object-cover" />
-                                <div>
-                                    <p class="font-medium text-zinc-900 dark:text-white">{{ $movie['title'] }}</p>
-                                    <p class="text-xs text-zinc-400">{{ $movie['duration'] }} &nbsp;·&nbsp; ⭐ {{ $movie['rating'] }}</p>
-                                </div>
-                            </div>
-                        </td>
+            {{-- Genre --}}
+            <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">
+                <span class="inline-flex items-center rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                    {{ $movie->genre }}
+                </span>
+            </td>
 
-                        <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">{{ $movie['genre'] }}</td>
+            {{-- Duration --}}
+            <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">
+                {{ $movie->duration_mins }} mins
+            </td>
 
-                        <td class="px-4 py-3">
-                            <span class="inline-flex items-center rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-                                {{ $movie['format'] }}
-                            </span>
-                        </td>
+            {{-- Age Rating --}}
+            <td class="px-4 py-3">
+                <span class="inline-flex items-center rounded-md bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                    {{ $movie->age_rating }}
+                </span>
+            </td>
 
-                        <td class="px-4 py-3 font-medium text-zinc-900 dark:text-white">
-                            £{{ number_format($movie['price'], 2) }}
-                        </td>
+            {{-- Screenings Count --}}
+            <td class="px-4 py-3 text-center font-medium text-zinc-900 dark:text-white">
+                {{ number_format($movie->screenings_count ?? 0) }}
+            </td>
 
-                        <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">
-                            {{ number_format($movie['bookings']) }}
-                        </td>
+            {{-- Bookings Count --}}
+            <td class="px-4 py-3 text-center font-medium text-emerald-600 dark:text-emerald-400">
+                {{ number_format($movie->bookings_count ?? 0) }}
+            </td>
 
-                        <td class="px-4 py-3">
-                            <x-admin.status-badge :status="$movie['status']" type="movie" />
-                        </td>
+            {{-- Status (computed from screenings) --}}
+            <td class="px-4 py-3">
+                @if($movie->screenings_count === 0)
+                    <span class="inline-flex items-center rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                        No Screenings
+                    </span>
+                @elseif($movie->now_showing_count > 0)
+                    <span class="inline-flex items-center rounded-md bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                        Now Showing
+                    </span>
+                @elseif($movie->upcoming_count > 0)
+                    <span class="inline-flex items-center rounded-md bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                        Coming Soon
+                    </span>
+                @else
+                    <span class="inline-flex items-center rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                        Ended
+                    </span>
+                @endif
+            </td>
 
-                        <td class="px-4 py-3 text-zinc-500 dark:text-zinc-400 text-xs">
-                            {{ \Carbon\Carbon::parse($movie['release'])->format('d M Y') }}
-                        </td>
+            {{-- Created Date --}}
+            <td class="px-4 py-3 text-zinc-500 dark:text-zinc-400 text-xs">
+                {{ $movie->created_at->format('d M Y') }}
+            </td>
 
-                        <td class="px-4 py-3">
-                            <div class="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                                <flux:button size="sm" variant="ghost" icon="pencil-square"
-                                    wire:click="openEdit({{ $movie['id'] }})" title="Edit" />
-                                <flux:button size="sm" variant="ghost"
-                                    icon="{{ $movie['status'] === 'active' ? 'archive-box' : 'arrow-path' }}"
-                                    wire:click="toggleStatus({{ $movie['id'] }})"
-                                    title="{{ $movie['status'] === 'active' ? 'Archive' : 'Restore' }}" />
-                                <flux:button size="sm" variant="ghost" icon="trash"
-                                    wire:click="confirmDelete({{ $movie['id'] }})" title="Delete"
-                                    class="text-red-500 hover:text-red-600" />
-                            </div>
-                        </td>
-                    </tr>
-                @empty
-                    <x-admin.table-empty icon="film" message="No movies match your filters." :colspan="8">
-                        <x-slot:actions>
-                            <flux:button variant="ghost" size="sm"
-                                wire:click="$set('search', ''); $set('filterGenre', ''); $set('filterStatus', '')">
-                                Clear filters
-                            </flux:button>
-                        </x-slot:actions>
-                    </x-admin.table-empty>
-                @endforelse
-            </tbody>
-        </table>
+            {{-- Actions --}}
+            <td class="px-4 py-3">
+                <div class="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                    <flux:button size="sm" variant="ghost" icon="pencil-square"
+                        wire:click="openEdit({{ $movie->id }})" title="Edit" />
+                    <flux:button size="sm" variant="ghost"
+                        icon="{{ $movie->trashed() ? 'arrow-path' : 'archive-box' }}"
+                        wire:click="toggleStatus({{ $movie->id }})"
+                        title="{{ $movie->trashed() ? 'Restore' : 'Archive' }}" />
+                </div>
+            </td>
+        </tr>
+    @endforeach
 
-        <x-admin.table-footer :showing="count($this->filteredMovies)" :total="count($movies)" noun="titles" />
+    {{-- Custom empty state actions --}}
+    <x-slot:emptyActions>
+        <flux:button variant="ghost" size="sm"
+            wire:click="$set('search', ''); $set('filterGenre', ''); $set('filterStatus', '')">
+            Clear filters
+        </flux:button>
+    </x-slot:emptyActions>
+</x-admin.table>
+
+    {{-- Pagination --}}
+    <div class="mt-4">
+        {{ $movies->links() }}
     </div>
 
-    {{-- Add / Edit Modal --}}
-    <flux:modal wire:model="showModal" class="w-full max-w-2xl">
+    {{-- Create Movie Modal --}}
+    <flux:modal wire:model="showCreateModal" class="w-full max-w-2xl">
         <div class="mb-6">
-            <flux:heading size="lg">{{ $editingId ? 'Edit Movie' : 'Add New Movie' }}</flux:heading>
-            <flux:text class="mt-1">
-                {{ $editingId ? 'Update the details for this title.' : 'Fill in the details to add a new title to the catalogue.' }}
-            </flux:text>
+            <flux:heading size="lg">Add New Movie</flux:heading>
+            <flux:text class="mt-1">Add a new movie to your cinema catalogue.</flux:text>
         </div>
 
         <form wire:submit="save">
-            <div class="grid grid-cols-2 gap-4">
-
-                <flux:field class="col-span-2">
+            <div class="space-y-4">
+                <flux:field>
                     <flux:label>Title</flux:label>
-                    <flux:input wire:model="form_title" placeholder="e.g. Neon Horizon" />
-                    <flux:error name="form_title" />
+                    <flux:input wire:model="title" placeholder="Enter movie title" />
+                    <flux:error name="title" />
                 </flux:field>
 
                 <flux:field>
-                    <flux:label>Genre</flux:label>
-                    <flux:select wire:model="form_genre">
-                        <flux:select.option value="">Select genre</flux:select.option>
-                        @foreach ($genres as $genre)
-                            <flux:select.option value="{{ $genre }}">{{ $genre }}</flux:select.option>
-                        @endforeach
-                    </flux:select>
-                    <flux:error name="form_genre" />
-                </flux:field>
-
-                <flux:field>
-                    <flux:label>Format</flux:label>
-                    <flux:select wire:model="form_format">
-                        <flux:select.option value="">Select format</flux:select.option>
-                        @foreach ($formats as $format)
-                            <flux:select.option value="{{ $format }}">{{ $format }}</flux:select.option>
-                        @endforeach
-                    </flux:select>
-                </flux:field>
-
-                <flux:field>
-                    <flux:label>Duration</flux:label>
-                    <flux:input wire:model="form_duration" placeholder="e.g. 2h 08m" />
-                </flux:field>
-
-                <flux:field>
-                    <flux:label>Price (£)</flux:label>
-                    <flux:input wire:model="form_price" type="number" step="0.50" min="0" placeholder="0.00" />
-                    <flux:error name="form_price" />
-                </flux:field>
-
-                <flux:field>
-                    <flux:label>Rating</flux:label>
-                    <flux:input wire:model="form_rating" placeholder="e.g. 4.8" />
-                </flux:field>
-
-                <flux:field>
-                    <flux:label>Release Date</flux:label>
-                    <flux:input wire:model="form_release" type="date" />
-                </flux:field>
-
-                <flux:field>
-                    <flux:label>Status</flux:label>
-                    <flux:select wire:model="form_status">
-                        <flux:select.option value="active">Now Showing</flux:select.option>
-                        <flux:select.option value="coming_soon">Coming Soon</flux:select.option>
-                        <flux:select.option value="archived">Archived</flux:select.option>
-                    </flux:select>
-                    <flux:error name="form_status" />
-                </flux:field>
-
-                <flux:field class="col-span-2">
-                    <flux:label>Poster URL</flux:label>
-                    <flux:input wire:model="form_image" placeholder="https://…" />
-                </flux:field>
-
-                <flux:field class="col-span-2">
                     <flux:label>Description</flux:label>
-                    <flux:textarea wire:model="form_description" rows="3" placeholder="Short synopsis…" />
+                    <flux:textarea wire:model="description" placeholder="Brief description of the movie" rows="3" />
+                    <flux:error name="description" />
                 </flux:field>
 
+                <div class="grid grid-cols-2 gap-4">
+                    <flux:field>
+                        <flux:label>Genre</flux:label>
+                        <flux:input wire:model="genre" placeholder="e.g., Action, Comedy" />
+                        <flux:error name="genre" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>Duration (minutes)</flux:label>
+                        <flux:input wire:model="duration_mins" type="number" placeholder="120" />
+                        <flux:error name="duration_mins" />
+                    </flux:field>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <flux:field>
+                        <flux:label>Age Rating</flux:label>
+                        <flux:input wire:model="age_rating" placeholder="e.g., PG-13, R" />
+                        <flux:error name="age_rating" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>Poster URL</flux:label>
+                        <flux:input wire:model="poster_url" placeholder="https://..." />
+                        <flux:error name="poster_url" />
+                    </flux:field>
+                </div>
             </div>
 
             <div class="mt-6 flex justify-end gap-2">
-                <flux:button variant="ghost" wire:click="$set('showModal', false)" type="button">Cancel</flux:button>
-                <flux:button type="submit" variant="primary">
-                    {{ $editingId ? 'Save Changes' : 'Add Movie' }}
-                </flux:button>
+                <flux:button type="button" variant="ghost" wire:click="$set('showCreateModal', false)">Cancel</flux:button>
+                <flux:button type="submit" variant="primary">Create Movie</flux:button>
             </div>
         </form>
     </flux:modal>
 
-    {{-- Delete Confirmation Modal --}}
-    <x-admin.confirm-modal
-        wire="showDeleteModal"
-        title="Delete Movie"
-        message="This will permanently remove the movie from the catalogue. This action cannot be undone."
-        confirm-label="Delete"
-        confirm-action="delete"
-    />
+    {{-- Edit Movie Modal --}}
+    <flux:modal wire:model="showEditModal" class="w-full max-w-2xl">
+        <div class="mb-6">
+            <flux:heading size="lg">Edit Movie</flux:heading>
+            <flux:text class="mt-1">Update movie details and availability.</flux:text>
+        </div>
+
+        <form wire:submit="update">
+            <div class="space-y-4">
+                <flux:field>
+                    <flux:label>Title</flux:label>
+                    <flux:input wire:model="title" placeholder="Enter movie title" />
+                    <flux:error name="title" />
+                </flux:field>
+
+                <flux:field>
+                    <flux:label>Description</flux:label>
+                    <flux:textarea wire:model="description" placeholder="Brief description of the movie" rows="3" />
+                    <flux:error name="description" />
+                </flux:field>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <flux:field>
+                        <flux:label>Genre</flux:label>
+                        <flux:input wire:model="genre" placeholder="e.g., Action, Comedy" />
+                        <flux:error name="genre" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>Duration (minutes)</flux:label>
+                        <flux:input wire:model="duration_mins" type="number" placeholder="120" />
+                        <flux:error name="duration_mins" />
+                    </flux:field>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <flux:field>
+                        <flux:label>Age Rating</flux:label>
+                        <flux:input wire:model="age_rating" placeholder="e.g., PG-13, R" />
+                        <flux:error name="age_rating" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>Poster URL</flux:label>
+                        <flux:input wire:model="poster_url" placeholder="https://..." />
+                        <flux:error name="poster_url" />
+                    </flux:field>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end gap-2">
+                <flux:button type="button" variant="ghost" wire:click="$set('showEditModal', false)">Cancel</flux:button>
+                <flux:button type="submit" variant="primary">Update Movie</flux:button>
+            </div>
+        </form>
+    </flux:modal>
 
 </div>
